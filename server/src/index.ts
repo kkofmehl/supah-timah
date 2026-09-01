@@ -14,6 +14,12 @@ const isProduction = process.env.NODE_ENV === 'production';
 
 const app = express();
 
+// Fly.io (and similar) terminate TLS at the edge; without this, secure session
+// cookies are not set because req.secure stays false over the internal HTTP hop.
+if (isProduction) {
+  app.set('trust proxy', 1);
+}
+
 app.use(express.json());
 app.use(cookieParser());
 app.use(
@@ -54,7 +60,13 @@ app.post('/api/login', async (req, res) => {
   }
 
   req.session.authenticated = true;
-  res.json({ ok: true });
+  req.session.save((err) => {
+    if (err) {
+      res.status(500).json({ error: 'Failed to create session' });
+      return;
+    }
+    res.json({ ok: true });
+  });
 });
 
 app.post('/api/logout', (req, res) => {

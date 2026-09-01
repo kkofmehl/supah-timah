@@ -21,3 +21,15 @@ Fixed dotenv not loading root `.env` when server runs from `server/` workspace c
 - Halfway sound plays three quick tones
 - Duplicate button for phases and repeat blocks in timer editor
 - Phase type dropdown updates label to match selected type
+
+### Follow-up: Docker build context
+Added `.dockerignore` to exclude local `node_modules`, `dist`, `.git`, `.env`, and other dev-only files from Docker builds (deps are installed via `npm ci` in the Dockerfile).
+
+### Follow-up: Docker deploy fix
+Fixed Fly deploy failure: copy `scripts/` before `npm ci` in builder (root `postinstall` generates assets), and use `--ignore-scripts` in runner stage (production only serves pre-built `client/dist`).
+
+### Follow-up: Fly runtime crash (bcrypt)
+Fixed production crash `Cannot find module bcrypt_lib.node`: runner stage `--ignore-scripts` skipped bcrypt's native binding install. Runner now copies `scripts/` and runs `npm ci` without `--ignore-scripts` so bcrypt installs correctly on Alpine.
+
+### Follow-up: Fly login loop
+Fixed login succeeding but redirecting back to login: added `trust proxy` in production so express-session sets `Secure` cookies behind Fly's HTTPS terminator; explicit `session.save()` on login; PWA `navigateFallbackDenylist` for `/api`.

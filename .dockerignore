@@ -1,0 +1,41 @@
+# Dependencies — installed fresh in the image via npm ci
+node_modules
+**/node_modules
+
+# Build output — rebuilt in the builder stage
+dist
+**/dist
+
+# Local runtime data (Fly volume in production)
+data
+**/data
+
+# Secrets and local env
+.env
+.env.*
+!.env.example
+
+# Version control and editor
+.git
+.gitignore
+.github
+.vscode
+.cursor
+.idea
+*.swp
+*.swo
+
+# OS and logs
+.DS_Store
+Thumbs.db
+*.log
+npm-debug.log*
+
+# Test and coverage artifacts
+coverage
+**/.vite
+**/tsconfig.tsbuildinfo
+
+# Dev-only docs (not needed in the image)
+feedback.md
+prompts.md

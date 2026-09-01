@@ -6,8 +6,10 @@ COPY package.json package-lock.json* ./
 COPY shared/package.json ./shared/
 COPY client/package.json ./client/
 COPY server/package.json ./server/
+COPY scripts ./scripts
 
-RUN npm ci --workspace=shared --workspace=client --workspace=server 2>/dev/null || npm install
+RUN mkdir -p client/public/sounds && \
+    npm ci --workspace=shared --workspace=client --workspace=server 2>/dev/null || npm install
 
 COPY shared ./shared
 COPY client ./client
@@ -25,8 +27,10 @@ ENV DATA_DIR=/data
 COPY package.json package-lock.json* ./
 COPY shared/package.json ./shared/
 COPY server/package.json ./server/
+COPY scripts ./scripts
 
-RUN npm ci --workspace=shared --workspace=server --omit=dev 2>/dev/null || \
+RUN mkdir -p client/public/sounds && \
+    npm ci --workspace=shared --workspace=server --omit=dev 2>/dev/null || \
     npm install --workspace=shared --workspace=server --omit=dev
 
 COPY --from=builder /app/shared/dist ./shared/dist
