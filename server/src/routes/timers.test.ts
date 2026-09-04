@@ -38,6 +38,10 @@ function createTestApp() {
     res.json({ ok: true });
   });
 
+  app.get('/api/ping', requireAuth, (_req, res) => {
+    res.json({ ok: true });
+  });
+
   app.use('/api/timers', timerRoutes);
   return app;
 }
@@ -86,6 +90,16 @@ describe('timers API', () => {
   it('rejects unauthenticated requests', async () => {
     const res = await request(app).get('/api/timers');
     expect(res.status).toBe(401);
+  });
+
+  it('serves authenticated keepalive ping', async () => {
+    const unauth = await request(app).get('/api/ping');
+    expect(unauth.status).toBe(401);
+
+    await agent.post('/api/login').send({ password: TEST_PASSWORD });
+    const res = await agent.get('/api/ping');
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ ok: true });
   });
 
   it('creates and lists timers', async () => {

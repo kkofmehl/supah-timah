@@ -57,9 +57,16 @@ function resolveSoundKey(
   return key;
 }
 
+/** Playback gain so beeps cut through background music. */
+export const PLAYBACK_GAIN = 1.6;
+
+/** Spacing between boxing-bell dings on work interval start. */
+export const WORK_BELL_REPEAT_MS = 350;
+
 export class SoundManager {
   private buffers = new Map<SoundKey, AudioBuffer>();
   private context: AudioContext | null = null;
+  private gainNode: GainNode | null = null;
   private loaded = false;
   private loading: Promise<void> | null = null;
 
@@ -73,6 +80,9 @@ export class SoundManager {
 
   private async loadAll(): Promise<void> {
     this.context = new AudioContext();
+    this.gainNode = this.context.createGain();
+    this.gainNode.gain.value = PLAYBACK_GAIN;
+    this.gainNode.connect(this.context.destination);
     await Promise.all(
       (Object.entries(SOUND_FILES) as [SoundKey, string][]).map(
         async ([key, url]) => {
@@ -91,7 +101,7 @@ export class SoundManager {
   }
 
   play(key: SoundKey): void {
-    if (!this.context || !this.buffers.has(key)) return;
+    if (!this.context || !this.gainNode || !this.buffers.has(key)) return;
 
     if (this.context.state === 'suspended') {
       void this.context.resume();
@@ -99,7 +109,7 @@ export class SoundManager {
 
     const source = this.context.createBufferSource();
     source.buffer = this.buffers.get(key)!;
-    source.connect(this.context.destination);
+    source.connect(this.gainNode);
     source.start(0);
   }
 
@@ -118,6 +128,15 @@ export class SoundManager {
       const sounds = { ...globalSounds, ...phaseSounds };
       if (sounds.halfway) {
         this.playRepeated('halfway', 3);
+      }
+      return;
+    }
+
+    // Work intervals get a triple boxing-bell ring (ding, ding, ding).
+    if (event.type === 'phaseStart' && event.phase?.type === 'work') {
+      const sounds = { ...globalSounds, ...phaseSounds };
+      if (sounds.intervalStart) {
+        this.playRepeated('intervalStart', 3, WORK_BELL_REPEAT_MS);
       }
       return;
     }

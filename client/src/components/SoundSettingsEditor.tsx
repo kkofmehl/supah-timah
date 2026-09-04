@@ -1,7 +1,7 @@
 import type { SoundSettings } from '@supah-timah/shared';
 
 const SOUND_LABELS: Record<keyof SoundSettings, string> = {
-  intervalStart: 'Interval start',
+  intervalStart: 'Work start (triple bell)',
   intervalEnd: 'Interval end',
   halfway: 'Halfway',
   switchSides: 'Switch sides',

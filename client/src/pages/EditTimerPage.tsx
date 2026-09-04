@@ -1,23 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
-  DndContext,
-  closestCenter,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  type DragEndEvent,
-} from '@dnd-kit/core';
-import {
-  arrayMove,
-  SortableContext,
-  sortableKeyboardCoordinates,
-  useSortable,
-  verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
-import {
   createId,
   isPhase,
   type Phase,
@@ -27,6 +10,7 @@ import {
   type TimerNode,
 } from '@supah-timah/shared';
 import { getTimer, updateTimer } from '../lib/api';
+import { moveItem } from '../lib/moveItem';
 import { calculateTotalDurationAccurate } from '../lib/timerEngine';
 import { DurationStepper, formatDurationLabel } from '../components/DurationStepper';
 import { ColorPicker } from '../components/ColorPicker';
@@ -78,32 +62,33 @@ function createDefaultRepeat(): RepeatBlock {
   };
 }
 
-interface SortableItemProps {
-  id: string;
-  children: React.ReactNode;
+interface MoveControlsProps {
+  index: number;
+  total: number;
+  onMove: (direction: -1 | 1) => void;
 }
 
-function SortableItem({ id, children }: SortableItemProps) {
-  const { attributes, listeners, setNodeRef, transform, transition } =
-    useSortable({ id });
-
+function MoveControls({ index, total, onMove }: MoveControlsProps) {
   return (
-    <div
-      ref={setNodeRef}
-      style={{ transform: CSS.Transform.toString(transform), transition }}
-      className="bg-white/5 rounded-xl p-4 space-y-3"
-    >
-      <div className="flex items-center gap-2">
-        <button
-          type="button"
-          className="text-gray-500 cursor-grab active:cursor-grabbing px-1"
-          {...attributes}
-          {...listeners}
-        >
-          ⠿
-        </button>
-        <div className="flex-1">{children}</div>
-      </div>
+    <div className="flex flex-col gap-0.5 shrink-0">
+      <button
+        type="button"
+        aria-label="Move up"
+        disabled={index === 0}
+        onClick={() => onMove(-1)}
+        className="px-2 py-1 rounded bg-white/10 text-sm leading-none disabled:opacity-30 disabled:pointer-events-none active:bg-white/20"
+      >
+        ▲
+      </button>
+      <button
+        type="button"
+        aria-label="Move down"
+        disabled={index >= total - 1}
+        onClick={() => onMove(1)}
+        className="px-2 py-1 rounded bg-white/10 text-sm leading-none disabled:opacity-30 disabled:pointer-events-none active:bg-white/20"
+      >
+        ▼
+      </button>
     </div>
   );
 }
@@ -232,6 +217,10 @@ function RepeatEditor({ block, onChange, onDelete, onDuplicate }: RepeatEditorPr
     });
   };
 
+  const moveChild = (index: number, direction: -1 | 1) => {
+    onChange({ ...block, children: moveItem(block.children, index, direction) });
+  };
+
   const addPhase = () => {
     onChange({ ...block, children: [...block.children, createDefaultPhase()] });
   };
@@ -282,43 +271,53 @@ function RepeatEditor({ block, onChange, onDelete, onDuplicate }: RepeatEditorPr
       />
 
       <div className="space-y-2 pl-2">
-        {block.children.map((child, i) =>
-          isPhase(child) ? (
-            <PhaseEditor
-              key={child.id}
-              phase={child}
-              onChange={(p) => updateChild(i, p)}
-              onDelete={() => deleteChild(i)}
-              onDuplicate={() =>
-                onChange({
-                  ...block,
-                  children: [
-                    ...block.children.slice(0, i + 1),
-                    cloneTimerNode(child),
-                    ...block.children.slice(i + 1),
-                  ],
-                })
-              }
+        {block.children.map((child, i) => (
+          <div
+            key={child.id}
+            className="bg-white/5 rounded-lg p-3 flex items-start gap-2"
+          >
+            <MoveControls
+              index={i}
+              total={block.children.length}
+              onMove={(direction) => moveChild(i, direction)}
             />
-          ) : (
-            <RepeatEditor
-              key={child.id}
-              block={child}
-              onChange={(b) => updateChild(i, b)}
-              onDelete={() => deleteChild(i)}
-              onDuplicate={() =>
-                onChange({
-                  ...block,
-                  children: [
-                    ...block.children.slice(0, i + 1),
-                    cloneTimerNode(child),
-                    ...block.children.slice(i + 1),
-                  ],
-                })
-              }
-            />
-          ),
-        )}
+            <div className="flex-1 min-w-0">
+              {isPhase(child) ? (
+                <PhaseEditor
+                  phase={child}
+                  onChange={(p) => updateChild(i, p)}
+                  onDelete={() => deleteChild(i)}
+                  onDuplicate={() =>
+                    onChange({
+                      ...block,
+                      children: [
+                        ...block.children.slice(0, i + 1),
+                        cloneTimerNode(child),
+                        ...block.children.slice(i + 1),
+                      ],
+                    })
+                  }
+                />
+              ) : (
+                <RepeatEditor
+                  block={child}
+                  onChange={(b) => updateChild(i, b)}
+                  onDelete={() => deleteChild(i)}
+                  onDuplicate={() =>
+                    onChange({
+                      ...block,
+                      children: [
+                        ...block.children.slice(0, i + 1),
+                        cloneTimerNode(child),
+                        ...block.children.slice(i + 1),
+                      ],
+                    })
+                  }
+                />
+              )}
+            </div>
+          </div>
+        ))}
         <button onClick={addPhase} className="text-sm text-indigo-400">
           + Add phase
         </button>
@@ -362,13 +361,6 @@ export function EditTimerPage() {
   const [saving, setSaving] = useState(false);
   const [showSounds, setShowSounds] = useState(false);
 
-  const sensors = useSensors(
-    useSensor(PointerSensor),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    }),
-  );
-
   useEffect(() => {
     if (!id) return;
     getTimer(id).then(setTimer);
@@ -381,16 +373,6 @@ export function EditTimerPage() {
   const updateNodes = useCallback((nodes: TimerNode[]) => {
     setTimer((t) => (t ? { ...t, nodes } : t));
   }, []);
-
-  const handleDragEnd = (event: DragEndEvent) => {
-    if (!timer) return;
-    const { active, over } = event;
-    if (!over || active.id === over.id) return;
-
-    const oldIndex = timer.nodes.findIndex((n) => n.id === active.id);
-    const newIndex = timer.nodes.findIndex((n) => n.id === over.id);
-    updateNodes(arrayMove(timer.nodes, oldIndex, newIndex));
-  };
 
   const handleSave = async () => {
     if (!timer) return;
@@ -449,39 +431,40 @@ export function EditTimerPage() {
           />
         )}
 
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragEnd={handleDragEnd}
-        >
-          <SortableContext
-            items={timer.nodes.map((n) => n.id)}
-            strategy={verticalListSortingStrategy}
-          >
-            <div className="space-y-3">
-              {timer.nodes.map((node, i) => (
-                <SortableItem key={node.id} id={node.id}>
-                  <NodeEditor
-                    node={node}
-                    onChange={(updated) => {
-                      const nodes = [...timer.nodes];
-                      nodes[i] = updated;
-                      updateNodes(nodes);
-                    }}
-                    onDelete={() =>
-                      updateNodes(timer.nodes.filter((_, j) => j !== i))
-                    }
-                    onDuplicate={() => {
-                      const nodes = [...timer.nodes];
-                      nodes.splice(i + 1, 0, cloneTimerNode(node));
-                      updateNodes(nodes);
-                    }}
-                  />
-                </SortableItem>
-              ))}
+        <div className="space-y-3">
+          {timer.nodes.map((node, i) => (
+            <div
+              key={node.id}
+              className="bg-white/5 rounded-xl p-4 flex items-start gap-3"
+            >
+              <MoveControls
+                index={i}
+                total={timer.nodes.length}
+                onMove={(direction) =>
+                  updateNodes(moveItem(timer.nodes, i, direction))
+                }
+              />
+              <div className="flex-1 min-w-0 space-y-3">
+                <NodeEditor
+                  node={node}
+                  onChange={(updated) => {
+                    const nodes = [...timer.nodes];
+                    nodes[i] = updated;
+                    updateNodes(nodes);
+                  }}
+                  onDelete={() =>
+                    updateNodes(timer.nodes.filter((_, j) => j !== i))
+                  }
+                  onDuplicate={() => {
+                    const nodes = [...timer.nodes];
+                    nodes.splice(i + 1, 0, cloneTimerNode(node));
+                    updateNodes(nodes);
+                  }}
+                />
+              </div>
             </div>
-          </SortableContext>
-        </DndContext>
+          ))}
+        </div>
 
         <div className="flex gap-2">
           <button

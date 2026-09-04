@@ -1,5 +1,36 @@
 # Prompt Log
 
+## 2026-09-03
+
+### User Prompt
+how about a triple ring, like "ding, ding, ding" with that sound you just created (kinda like the halfway one)
+
+### Follow-up
+Shortened boxing-bell ding and play it three times (350ms apart) on work phase start, matching halfway's triple-cue pattern.
+
+### User Prompt
+did you download all those sound files or create them yourself? Can you create like a boxing bell sound that signifys the start of a work interval?
+
+### Follow-up
+Clarified sounds are synthesized in `scripts/generate-sounds.js` (not downloaded). Replaced interval-start beep with a metallic boxing-bell WAV used for work phase starts.
+
+### User Prompt
+I can't run npm install right now. Like something is stuck.
+
+### Follow-up
+Checked for hung npm processes (none). Dependencies were already installed from earlier agent run; `npm install --no-audit --prefer-offline` completed in ~0.5s. Earlier hang was likely contention with a parallel install / slow audit.
+
+### User Prompt
+Address the Feedback in timah_feedback.md:
+- Replace timer drag/drop with move up/down (mobile drag is unreliable)
+- Keep screen awake on mobile and keep the Fly pod alive while a timer is running
+- Increase notification sound volume so beeps cut through music
+
+### Implementation
+- Replaced `@dnd-kit` sortable drag handles with ▲/▼ move controls (top-level nodes and repeat children)
+- Hardened wake lock re-acquire on visibility/release; added authenticated `/api/ping` + client keepalive while workout is active
+- Raised generated WAV amplitude and SoundManager playback gain
+
 ## 2026-09-01
 
 ### User Prompt

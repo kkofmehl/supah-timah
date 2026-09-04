@@ -6,6 +6,7 @@ import bcrypt from 'bcrypt';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { isAuthConfigured } from './loadEnv.js';
+import { requireAuth } from './auth.js';
 import timerRoutes from './routes/timers.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -73,6 +74,10 @@ app.post('/api/logout', (req, res) => {
   req.session.destroy(() => {
     res.json({ ok: true });
   });
+});
+
+app.get('/api/ping', requireAuth, (_req, res) => {
+  res.json({ ok: true });
 });
 
 app.use('/api/timers', timerRoutes);

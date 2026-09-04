@@ -11,8 +11,8 @@ A mobile-first workout timer PWA for HIIT, circuits, Tabata, EMOM, and custom in
 - **Warmup / cooldown** phases
 - **Notification sounds** for interval start/end, halfway, switch, rest, get ready, countdown, complete
 - **Password-protected** single-user access
-- **PWA** with screen wake lock during workouts
-- **Fly.io** auto-stop/start for minimal cost
+- **PWA** with screen wake lock and server keepalive while a workout is running
+- **Fly.io** auto-stop/start for minimal cost (keepalive prevents suspend mid-timer)
 
 ## Local Development
 

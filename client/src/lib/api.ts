@@ -78,4 +78,9 @@ export async function deleteTimer(id: string): Promise<void> {
   await request(`/api/timers/${id}`, { method: 'DELETE' });
 }
 
+/** Lightweight keepalive so Fly does not auto-stop during a running workout. */
+export async function ping(): Promise<void> {
+  await request('/api/ping');
+}
+
 export { ApiError };

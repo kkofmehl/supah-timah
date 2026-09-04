@@ -4,6 +4,7 @@ import type { Timer } from '@supah-timah/shared';
 import { getTimer } from '../lib/api';
 import { useTimerEngine } from '../hooks/useTimerEngine';
 import { useWakeLock } from '../hooks/useWakeLock';
+import { useKeepAlive } from '../hooks/useKeepAlive';
 import { soundManager } from '../lib/soundManager';
 import { formatTimeMs } from '../lib/timerEngine';
 
@@ -47,6 +48,7 @@ export function RunTimerPage() {
     state.status === 'switchHold';
 
   useWakeLock(isActive);
+  useKeepAlive(isActive);
 
   const handleStart = async () => {
     await soundManager.init();
