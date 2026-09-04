@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 /**
- * Generate a bcrypt hash for APP_PASSWORD_HASH in .env
+ * Generate a bcrypt-compatible hash for APP_PASSWORD_HASH in .env
  * Usage: npm run hash-password -- your-password
  */
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 
 const password = process.argv[2];
 
@@ -13,7 +13,7 @@ if (!password) {
   console.error('Example:');
   console.error('  npm run hash-password -- mysecret');
   console.error('');
-  console.error('Then add the output to .env (keep the single quotes):');
+  console.error('Then add the output to your .env (keep the single quotes):');
   console.error("  APP_PASSWORD_HASH='$2b$10$...'");
   process.exit(1);
 }

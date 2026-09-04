@@ -1,5 +1,4 @@
 import { Router } from 'express';
-import bcrypt from 'bcrypt';
 import type { Timer } from '@supah-timah/shared';
 import { requireAuth } from '../auth.js';
 import * as store from '../storage/jsonStore.js';

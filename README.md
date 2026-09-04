@@ -88,7 +88,7 @@ fly deploy
 Generate hash:
 
 ```bash
-node -e "const bcrypt=require('bcrypt'); bcrypt.hash('your-password', 10).then(console.log)"
+node -e "import('bcryptjs').then(b => b.hash('your-password', 10).then(console.log))"
 ```
 
 The app uses `shared-cpu-1x` with 256MB RAM and auto-stops when idle.

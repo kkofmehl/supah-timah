@@ -2,7 +2,7 @@ import './loadEnv.js';
 import express from 'express';
 import session from 'express-session';
 import cookieParser from 'cookie-parser';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { isAuthConfigured } from './loadEnv.js';

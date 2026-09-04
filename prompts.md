@@ -3,6 +3,12 @@
 ## 2026-09-03
 
 ### User Prompt
+I had to stop the deploy. It was stuck on npm ci in the Docker build for a long while.
+
+### Follow-up
+Replaced native `bcrypt` with pure-JS `bcryptjs` (Alpine native compile was hanging). Cleaned Dockerfile: removed `2>/dev/null || npm install` fallback, use strict `npm ci`, runner `--ignore-scripts` again.
+
+### User Prompt
 how about a triple ring, like "ding, ding, ding" with that sound you just created (kinda like the halfway one)
 
 ### Follow-up
